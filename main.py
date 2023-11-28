@@ -1,16 +1,45 @@
-# This is a sample Python script.
-
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+import telebot
+from telebot import types
+TOKEN = "6929195675:AAGoFJ-XBZCPvb-0tF7-d-cj3meftxogqCc"
+bot = telebot.TeleBot(TOKEN)
 
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+@bot.message_handler(commands=["start"])
+def start(message):
+    markup = types.ReplyKeyboardMarkup()
+    btn1 = types.KeyboardButton("Go to site")
+    btn2 = types.KeyboardButton("delete")
+    btn3 = types.KeyboardButton("edit")
+    markup.row(btn1, btn2, btn3)
+    file = open("parrots.jpg", 'rb')
+    bot.send_photo(message.chat.id, file, reply_markup=markup)
+    #bot.send_message(message.chat.id, "Hello!", reply_markup=markup)
+    bot.register_next_step_handler(message, on_click)
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+
+def on_click(message):
+    if message.text == "Go to site":
+        bot.send_message(message.chat.id, "Website is open")
+    elif message.text == "delete":
+        bot.send_message(message.chat.id, "deleted!")
+
+
+@bot.message_handler(content_types=['photo'])
+def get_photo(message):
+    markup = types.InlineKeyboardMarkup() #button add
+    btn1 = types.InlineKeyboardButton("Перейти на сайт", url="https://google.com")
+    markup.row(btn1)
+    btn2 = types.InlineKeyboardButton("Delete photo", callback_data="delete")
+    btn3 = types.InlineKeyboardButton("Change text", callback_data="edit")
+    markup.row(btn2, btn3)
+    bot.reply_to(message, "cool picture", reply_markup=markup)
+
+@bot.callback_query_handler(func=lambda callback: True)
+def callback_message(callback):
+    if callback.data == "delete":
+        bot.delete_message(callback.message.chat.id, callback.message.message_id - 1)
+    elif callback.data == "edit":
+        bot.edit_message_text("edit-text", callback.message.chat.id, callback.message.message_id)
+
+
+bot.polling(none_stop=True)
